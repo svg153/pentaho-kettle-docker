@@ -1,7 +1,21 @@
 FROM ubuntu:trusty
 
-RUN apt-get update
-RUN apt-get -y install software-properties-common curl
+ENV DEBIAN_FRONTEND noninteractive
+ENV ROOTPASSWORD pentaho
+
+# set up ubuntu
+RUN apt-get -qq update > /dev/null 2>&1 && \
+    apt-get -qq -y install \
+        software-properties-common curl unzip \
+        ssh net-tools openssh-server socat \
+        > /dev/null 2>&1
+
+# sshd
+EXPOSE 22
+RUN echo "root:$ROOTPASSWORD" | chpasswd && \
+    sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && \
+    echo "export VISIBLE=now" >> /etc/profile
 
 # Install gosu
 ENV GOSU_VERSION 1.9
@@ -18,20 +32,22 @@ RUN set -x \
 
 # Install java
 RUN add-apt-repository ppa:webupd8team/java
-RUN apt-get update
+RUN apt-get update > /dev/null 2>&1
 RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
-RUN apt-get -y install oracle-java8-installer oracle-java8-set-default #ant
+RUN apt-get -y install oracle-java8-installer oracle-java8-set-default #ant > /dev/null 2>&1
 
 # Install PDI
-RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
-RUN curl -L http://downloads.sourceforge.net/project/pentaho/Data%20Integration/4.2.1-stable/pdi-ce-4.2.1-stable.tar.gz | tar xz --strip-components=1
+RUN wget -q "https://kent.dl.sourceforge.net/project/pentaho/Data%20Integration/7.0/pdi-ce-7.0.0.0-25.zip" -O /usr/src/app/app.zip && \
+    unzip -qq /usr/src/app/app.zip && \
+    rm /usr/src/app/app.zip
 
 # Install newer MySQL connector
-RUN rm libext/JDBC/mysql-connector-java-5.1.17.jar \
- && curl -L https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.35.tar.gz | tar xz --strip-components=1 -C libext/JDBC/ mysql-connector-java-5.1.35/mysql-connector-java-5.1.35-bin.jar
+RUN curl -Ls "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.41.tar.gz" | \
+    tar -xz --strip-components=1 --directory "/usr/src/app/data-integration/lib" "mysql-connector-java-5.1.41/mysql-connector-java-5.1.41-bin.jar"
+ENV PATH=/usr/src/app/data-integration:$PATH
 
-ENV PATH=/usr/src/app:$PATH
+WORKDIR /usr/src/app/data-integration
 
 COPY with_app_user /
 COPY configure_and_start /
