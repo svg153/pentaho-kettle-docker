@@ -10,13 +10,6 @@ RUN apt-get -qq update > /dev/null 2>&1 && \
         ssh net-tools openssh-server socat \
         > /dev/null 2>&1
 
-# sshd
-EXPOSE 22
-RUN echo "root:$ROOTPASSWORD" | chpasswd && \
-    sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-    sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && \
-    echo "export VISIBLE=now" >> /etc/profile
-
 # Install gosu
 ENV GOSU_VERSION 1.9
 RUN set -x \
