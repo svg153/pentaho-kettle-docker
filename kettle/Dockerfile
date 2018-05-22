@@ -1,13 +1,13 @@
 FROM ubuntu:trusty
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV ROOTPASSWORD pentaho
 
 # set up ubuntu
 RUN apt-get -qq update > /dev/null 2>&1 && \
     apt-get -qq -y install \
-        software-properties-common curl unzip \
-        ssh net-tools openssh-server socat \
+        software-properties-common \
+        curl net-tools socat \
+        unzip \
         > /dev/null 2>&1
 
 # Install gosu
