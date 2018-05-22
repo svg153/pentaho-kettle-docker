@@ -1,0 +1,10 @@
+# kettle dot folder
+/.kettle
+/spoon/Dockerfile-spoon-new
+
+# workspace folder
+/ws/**
+
+# Whitelist some files
+!.gitignore
+!README.md

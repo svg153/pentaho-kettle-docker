@@ -2,6 +2,7 @@
 set -e
 
 mkdir -p ~/.kettle
+mkdir -p ~/ws
 
 if [ $DATABASE_HOST ]; then
 cat >~/.kettle/repositories.xml <<EOF;
